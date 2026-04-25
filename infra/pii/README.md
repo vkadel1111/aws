@@ -119,3 +119,51 @@ forward. Hold it in memory; never persist or log it.
 A CI test (`tests/test_no_pii_in_logs.py`) submits a fixture containing
 synthetic but unique PII patterns and asserts that none appear in captured
 log output. **This test must pass before any image is promoted.**
+
+## Cost
+
+Estimates in **USD, us-east-1, on-demand** pricing. Numbers reflect the
+default configuration: 1 Fargate task at 1 vCPU / 2 GB, internal ALB, VPC
+endpoints in 2 AZs, no NAT.
+
+### At minimum capacity (idle / batch warmup)
+
+| Component | Calculation | $/hr |
+|---|---|---|
+| Fargate task (1 × 1 vCPU + 2 GB) | (1 × $0.04048) + (2 × $0.004445) | $0.0494 |
+| Internal ALB (fixed + minimal LCU at 50 req/hr) | $0.0225 + ~$0.002 | $0.025 |
+| VPC interface endpoints (3 endpoints × 2 AZs) | 6 × $0.01 | $0.060 |
+| CloudWatch Logs ingest (metadata only) | ~0.5 MB/hr × $0.50/GB | ~$0.0003 |
+| ECR storage (~500 MB image, amortised) | $0.10/GB/mo | ~$0.0001 |
+| **Total** | | **≈ $0.135 / hr** |
+
+### At a 4-task scaled peak
+
+| Component | $/hr |
+|---|---|
+| Fargate (4 tasks) | $0.197 |
+| ALB | $0.025 |
+| VPC endpoints | $0.060 |
+| Other | ~$0.001 |
+| **Total** | **≈ $0.28 / hr** |
+
+### Per-batch and monthly views
+
+- **Per batch (50 conversations, ~5 min wall-clock at min capacity):**
+  ~$0.011 if the stack is brought up only for the run.
+- **Always-on (24×7) at min capacity:** ~$0.135 × 730 ≈ **$98/mo**. Fixed
+  costs dominate: ALB $16/mo and VPC endpoints $43/mo.
+
+### Cost-shaping notes
+
+- VPC endpoints are the biggest fixed cost in this design. They are kept
+  because they let the service run with zero internet egress, which is a
+  security property worth paying for.
+  - For an **always-on** deployment you may prefer one NAT gateway
+    (~$32/mo + traffic) and remove the endpoints; for **batch with
+    teardown**, endpoints are cheaper because they vanish on `make down`.
+- Fargate Compute Savings Plans can reduce Fargate cost by 17–27%; not
+  relevant for tear-up/tear-down workflows.
+- Image pulls through the ECR endpoint cost $0.01/GB. A 500 MB image
+  pulled by 4 tasks per cold start ≈ $0.02 per teardown/rebuild cycle.
+- Other regions vary by ±5–15% from us-east-1.
