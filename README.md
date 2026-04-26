@@ -12,6 +12,7 @@ customers end up on the phone for self-service-eligible intents.
 | If you are… | Read |
 |---|---|
 | Establishing context, setting goals, scoping work | [`docs/scope.md`](docs/scope.md) |
+| Surveying public reference architectures and gaps | [`docs/prior-art.md`](docs/prior-art.md) |
 | Calling the PII redaction service | [`docs/pii-api.md`](docs/pii-api.md) |
 | Deploying or tearing down the PII service | [`docs/deploy-and-test.md`](docs/deploy-and-test.md), then [`infra/pii/README.md`](infra/pii/README.md) |
 | Modifying the PII service code | [`services/pii/README.md`](services/pii/README.md) |
@@ -24,6 +25,7 @@ customers end up on the phone for self-service-eligible intents.
 ├── README.md                       this file — index and navigation
 ├── docs/                           role-agnostic documentation
 │   ├── scope.md                    founding artifact: vision, value prop, MVP / long-term scope, non-goals
+│   ├── prior-art.md                public reference architectures, what to borrow, where the gaps are
 │   ├── pii-api.md                  consumer guide: how to call the PII redaction service
 │   ├── architecture-pii.md         Mermaid diagrams of the PII service components and flow
 │   └── deploy-and-test.md          operator runbook: local tests → bootstrap → deploy → test → teardown
